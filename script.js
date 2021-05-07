@@ -1169,5 +1169,6 @@ const animate = () => {
   gameInfo.message.update();
   requestAnimationFrame(animate);
 };
-
-animate();
+window.onload = () => {
+  animate();
+};
