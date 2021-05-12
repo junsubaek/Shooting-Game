@@ -14,6 +14,7 @@ const bossUltimateParticleImg = new Image();
 const resourceImg = new Image();
 const backGroundImg = new Image();
 const explosionImg = new Image();
+const flameImg = new Image();
 
 aimImg.src = "image/aim.png";
 heroImg.src = "image/hero.png";
@@ -29,6 +30,9 @@ bossUltimateImg.src = "image/bossUltimate.png";
 resourceImg.src = "image/resource.png";
 backGroundImg.src = "image/background.png";
 explosionImg.src = "image/explosion.png";
+flameImg.src = "image/flameImg.png";
+
+const gameImages = {};
 
 const gameInfo = {
   hero: undefined,
@@ -80,8 +84,11 @@ const gameFlag = {
   explosion: false,
   hit: false,
 };
-
+const heroBulletEffectSoundArray = [];
 let weakEnemyCountControl = 500;
+
+let playing = false;
+let i = 0;
 
 canvas.width = canvas.parentNode.clientWidth;
 canvas.height = canvas.parentNode.clientHeight;
@@ -105,7 +112,10 @@ window.addEventListener("keydown", (e) => {
 
 window.addEventListener("keyup", (e) => {
   if (e.code === "KeyA") keyboardEvents.pressedKeyA = false;
-  if (e.code === "KeyS") keyboardEvents.pressedKeyS = false;
+  if (e.code === "KeyS") {
+    keyboardEvents.pressedKeyS = false;
+  }
+
   if (e.code === "KeyD") keyboardEvents.pressedKeyD = false;
   if (e.code === "ArrowLeft") keyboardEvents.pressedLeft = false;
   if (e.code === "ArrowRight") keyboardEvents.pressedRight = false;
@@ -248,6 +258,9 @@ class Projectile {
 const projectilesHandler = (aimX, aimY) => {
   if (keyboardEvents.pressedKeyS && gameCount.projectiles % 7 === 0) {
     gameInfo.projectiles.push(new Projectile(aimX, aimY));
+    const heroBulletEffectSound = new Audio();
+    heroBulletEffectSound.src = "music/heroBulletEffect.mp3";
+    heroBulletEffectSound.play();
   }
 
   for (let i = 0; i < gameInfo.projectiles.length; i++) {
@@ -370,7 +383,7 @@ class StrongEnemy {
   constructor() {
     this.x = canvas.width;
     this.y = Math.random() * (canvas.height - 100) + 100;
-    this.hp = 30;
+    this.hp = 6;
     this.width = 150;
     this.height = 80;
     this.movement = [
@@ -436,7 +449,7 @@ const strongEnemyHandler = () => {
         collision(gameInfo.strongEnemy[i], gameInfo.projectiles[j])
       ) {
         gameInfo.strongEnemy[i].opacity = 0;
-        gameInfo.strongEnemy[i].hp -= 10;
+        gameInfo.strongEnemy[i].hp -= 2;
         if (gameInfo.strongEnemy[i].hp <= 0) {
           gameInfo.statusBoard.score += 20;
           gameInfo.explosions.push(
@@ -937,15 +950,36 @@ const ultimateHandler = () => {
   }
 };
 
+class UltimateFlameEffect {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.frame = 0;
+    this.maxFrame = 27;
+  }
+
+  update() {
+    if (this.frame < this.maxFrame) {
+      this.frame++;
+      this.draw();
+    }
+  }
+
+  draw() {
+    // ctx.drawImage(flameImg,0,flameImg.height,)
+  }
+}
+
 class Explosion {
   constructor(x, y) {
     this.x = x;
     this.y = y;
     this.frame = 0;
+    this.maxFrame = 16;
   }
 
   update() {
-    if (this.frame <= 16) {
+    if (this.frame <= this.maxFrame) {
       this.frame++;
       this.draw();
     }
@@ -1087,6 +1121,7 @@ const statusBoardHandler = () => {
 };
 
 const init = () => {
+  // backgroundMusic.play();
   heroHandler();
   aimHandler();
   statusBoardHandler();
@@ -1119,7 +1154,7 @@ const resetGameData = () => {
 const collision = (first, second) => {
   if (
     first.x + first.width > second.x &&
-    first.x < second.x + second.width &&
+    first.x + first.width * 0.2 < second.x + second.width &&
     first.y < second.y + second.height &&
     first.y + first.height > second.y
   ) {
